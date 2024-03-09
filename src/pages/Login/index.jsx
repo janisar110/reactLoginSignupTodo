@@ -16,19 +16,9 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import {auth} from "../../firebase"
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { doc } from 'firebase/firestore';
 
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
+
 
 
 
@@ -53,10 +43,16 @@ export default function Login() {
 
 
 signInWithEmailAndPassword(auth, email, password)
-.then((userCredential) => {
+.then(async(userCredential) => {
   // Signed in 
   const user = userCredential.user;
   // ...
+   const userUid = userCredential.user.uid;
+  localStorage.setItem("uid", userUid);
+
+        const docs = await getDoc(doc(db, "users", userUid));
+        // console.log(docs.data(), "docs");
+        localStorage.setItem("userData", JSON.stringify(docs.data()));
   
   toast.success('Successfuly Login!', {
     position: "top-center",
@@ -156,7 +152,6 @@ signInWithEmailAndPassword(auth, email, password)
             </Grid>
           </Box>
         </Box>
-        <Copyright sx={{ mt: 8, mb: 4 }} />
       </Container>
     </ThemeProvider>
   );

@@ -105,7 +105,7 @@ const addTodo = async () => {
         
          <input type="text" placeholder='Enter todo here' value={inputVal} onChange={e=>setInputVal(e.target.value)}
   className='p-2 text-2xl rounded-md'/>
-        <button className='p-3 bg-slate-600 font-bold text-white rounded-md ' onClick={addTodo}>Add Todo</button>
+        <button className='p-3 bg-blue-600 font-bold text-white rounded-md ' onClick={addTodo}>Add Todo</button>
         </div>
     </form>
 
@@ -113,7 +113,7 @@ const addTodo = async () => {
     {
       userData.map((value,index)=>{
         return (
-          <li key={index} className='flex justify-between my-3 p-3 rounded-md text-2xl text-white  bg-slate-700 shadow-2xl'>
+          <li key={index} className='flex justify-between my-3 p-3 rounded-md text-2xl text-white  bg-blue-600 shadow-2xl'>
           <div className=''>
           {value.inputVal}
           </div>

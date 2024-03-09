@@ -12,28 +12,19 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithRedirect } from "firebase/auth";
 import { auth } from '../../firebase';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { doc, setDoc } from "firebase/firestore"; 
+import { doc, setDoc } from "firebase/firestore";
 import { db } from '../../firebase';
+import { IconButton } from '@mui/material';
+import { GitHub, Google } from '@mui/icons-material';
+import { signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from "firebase/auth";
 
 // import { Link } from 'react-router-dom';
 
 
-function Copyright(props) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
 
 
 
@@ -50,15 +41,96 @@ export default function SignUp() {
   const [firstName, setFirstName] = React.useState();
   const [lastName, setLastName] = React.useState();
   // const [users, setUsers] = React.useState();
-  
+
 
   const navigate = useNavigate();
+
+  //SignUp with github 
+
+  const gitHubSignUp = () => {
+
+    const provider = new GithubAuthProvider();
+
+
+    const auth = getAuth();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        // This gives you a GitHub Access Token. You can use it to access the GitHub API.
+        const credential = GithubAuthProvider.credentialFromResult(result);
+        const token = credential.accessToken;
+
+        // The signed-in user info.
+        const user = result.user;
+        localStorage.setItem("uid", user.uid);
+        // IdP data available using getAdditionalUserInfo(result)
+        toast.success('Successfuly SignUp!', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+
+        });
+        navigate("/home")
+        // ...
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData.email;
+        // The AuthCredential type that was used.
+        const credential = GithubAuthProvider.credentialFromError(error);
+        // ...
+      });
+  }
+  //SignUp with Googel
+
+  const googleSignUp = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const token = credential.accessToken;
+        // The signed-in user info.
+        const user = result.user;
+        localStorage.setItem("uid", user.uid);
+
+        toast.success('Successfuly SignUp!', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+
+        });
+
+
+        navigate("/home")
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+      });
+
+
+
+
+  }
+
 
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if(!email || !password || !firstName || !lastName){
-    
+    if (!email || !password || !firstName || !lastName) {
+
       toast.error('Input field Missing!', {
         position: "top-center",
         autoClose: 5000,
@@ -68,58 +140,57 @@ export default function SignUp() {
         draggable: true,
         progress: undefined,
         theme: "light",
+      });
+      return;
+    }
+
+
+    //SignUp user with email and pasword
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(async (userCredential) => {
+        // Signed up 
+        const user = userCredential.user;
+
+
+        const myObj = {
+          firstName,
+          lastName,
+          email
+        }
+        // Add a new document in collection "cities"
+        await setDoc(doc(db, "users", user.uid), myObj);
+
+        // ...
+
+        toast.success('Successfuly SignUp!', {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+
         });
-        return ;
-      }
 
-          
-
-//SignUp user
-
-        createUserWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-          // Signed up 
-          const user = userCredential.user;
-          
-       
-            const myObj = {
-              firstName,
-              lastName,
-              email
-            }
-            // Add a new document in collection "cities"
-            await setDoc(doc(db, "users", user.uid), myObj);
-         
-          // ...
-      
-          toast.success('Successfuly SignUp!', {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            
-            });
-      
-            navigate("/")
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          toast.error(errorCode, {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            });
-          // ..
+        navigate("/")
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        toast.error(errorCode, {
+          position: "top-center",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
         });
+        // ..
+      });
     // console.log(email,password,firstName,lastName)
   };
 
@@ -156,7 +227,7 @@ export default function SignUp() {
                   id="firstName"
                   label="First Name"
                   autoFocus
-                  onChange={(e)=>setFirstName(e.target.value)}
+                  onChange={(e) => setFirstName(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -167,7 +238,7 @@ export default function SignUp() {
                   label="Last Name"
                   name="lastName"
                   autoComplete="family-name"
-                  onChange={(e)=>setLastName(e.target.value)}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -178,7 +249,7 @@ export default function SignUp() {
                   label="Email Address"
                   name="email"
                   autoComplete="email"
-                  onChange={(e)=>setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -190,10 +261,10 @@ export default function SignUp() {
                   type="password"
                   id="password"
                   autoComplete="new-password"
-                  onChange={(e)=>setPasword(e.target.value)}
+                  onChange={(e) => setPasword(e.target.value)}
                 />
               </Grid>
-              
+
             </Grid>
             <Button
               type="submit"
@@ -212,7 +283,25 @@ export default function SignUp() {
             </Grid>
           </Box>
         </Box>
-        <Copyright sx={{ mt: 5 }} />
+        <Box>
+          <Grid>
+            <Button
+              onClick={gitHubSignUp}
+              sx={{ marginTop: "10px", padding: "20px", width: "100%", color: "black" }}
+              variant="outlined"
+              startIcon={<GitHub icon={GitHub}
+              />}>
+              SignUp with GitHub
+            </Button>
+            <Button
+              onClick={googleSignUp}
+              sx={{ marginTop: "10px", padding: "20px", width: "100%", color: "black" }}
+              variant="outlined"
+              startIcon={<Google fontSize='large' icon={Google}  />}>
+              SignUp with Google
+            </Button>
+          </Grid>
+        </Box>
       </Container>
     </ThemeProvider>
   );
